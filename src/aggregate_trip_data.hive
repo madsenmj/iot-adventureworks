@@ -1,0 +1,101 @@
+DROP TABLE IF EXISTS iotdata.tripdatav2;
+
+CREATE EXTERNAL TABLE iotdata.tripdatav2 (
+  iotkey string,
+  eventDateTime string,
+  eventLat float,
+  eventLon float,
+  eventDist float,
+  eventAccMag float,
+  tripID string
+)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+LOCATION '/user/maria_dev/tripdatav2/'
+tblproperties ("skip.header.line.count"="1");
+
+DROP TABLE IF EXISTS iotdata.tripdatav2Int;
+
+CREATE TABLE iotdata.tripdatav2Int
+(
+iotKey string,
+tripID string,
+starttime string,
+endtime string,
+TotalDistance double,
+cLat double,
+cLon double
+);
+
+TRUNCATE TABLE iotdata.tripdatav2Int;
+
+INSERT INTO TABLE iotdata.tripdatav2Int
+SELECT iotkey,
+tripid,
+MIN(eventdatetime),
+MAX(eventdatetime),
+SUM(eventdist),
+AVG(eventlat),
+AVG(eventlon)
+FROM iotdata.tripdatav2
+GROUP BY iotkey,tripid;
+
+
+DROP TABLE IF EXISTS iotdata.tripdatav2accInt;
+
+CREATE TABLE iotdata.tripdatav2accInt
+(
+iotKey string,
+tripID string,
+accMaxTime string,
+accMax double
+);
+
+TRUNCATE TABLE iotdata.tripdatav2accInt;
+
+INSERT INTO TABLE iotdata.tripdatav2accInt
+SELECT iotkey,
+tripid,
+eventdatetime as maxacctime,
+eventaccmag as maxacc
+FROM
+	(SELECT 
+	 	iotkey, 
+	 	tripid, 
+	 	eventdatetime, 
+	 	eventaccmag, 
+	 	row_number() over (partition by iotkey,tripid order by eventaccmag DESC) as r
+	 FROM iotdata.tripdatav2) t
+WHERE r = 1;
+
+DROP TABLE IF EXISTS iotdata.tripdatav2Final;
+
+CREATE TABLE iotdata.tripdatav2Final
+(
+  iotKey string,
+  tripID string,
+  tripStartTime string,
+  tripEndTime string,
+  tripDistance double,
+  cLat double,
+  cLon double,
+  tripMaxAcc double,
+  tripMaxAccTime string
+)ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'
+STORED AS TEXTFILE 
+LOCATION '/user/maria_dev/tripdatav2/summary';
+
+
+TRUNCATE TABLE iotdata.tripdatav2Final;
+
+INSERT INTO TABLE iotdata.tripdatav2Final
+SELECT a.iotkey,
+  a.tripid,
+  a.starttime,
+  a.endtime,
+  a.totaldistance,
+  a.cLat,
+  a.cLon,
+  b.accmax,
+  b.accmaxtime
+FROM iotdata.tripdatav2int a JOIN iotdata.tripdatav2accint b
+ON a.tripid = b.tripid;
