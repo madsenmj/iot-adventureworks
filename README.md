@@ -17,7 +17,7 @@ The device transmits the telemetry data on 10 second intervals for as long as th
 
 # Initial Data
 
-The starting point for this project is the [AdventurWorks2012DW data file for SQL server](https://msftdbprodsamples.codeplex.com/releases/view/55330). The downloaded database is then [attached to the SQL Server using SSMS] (https://docs.microsoft.com/en-us/sql/relational-databases/databases/attach-a-database). Once attached the following query is run on the database to extract the bicycle helmet users that have purchased the bicycle helmet (model HL-U509-B): [SQL Query](/src/AW_customerQuery.sql). The output is then copied (select all, right-click, use `Copy with Headers`) from the window in SSMS and pasted into a [csv file](/data/AW_helment_customerData.csv).
+The starting point for this project is the [AdventurWorks2012DW data file for SQL server](https://msftdbprodsamples.codeplex.com/releases/view/55330). The downloaded database is then [attached to the SQL Server using SSMS](https://docs.microsoft.com/en-us/sql/relational-databases/databases/attach-a-database). Once attached the following query is run on the database to extract the bicycle helmet users that have purchased the bicycle helmet (model HL-U509-B): [SQL Query](/src/AW_customerQuery.sql). The output is then copied (select all, right-click, use `Copy with Headers`) from the window in SSMS and pasted into a [csv file](/data/AW_helment_customerData.csv).
 
 # Simulate IoT Data.
 
