@@ -75,6 +75,6 @@ Finally I added a [geographical database](\data\worldcitiespop.txt) that has geo
 
 ## DAX Patterns
 
-The `DAX` patterns for the tabular model are described [here](\src\TabularModelDAX.md).
+The `DAX` patterns for the tabular model are described [here](/src/TabularModelDAX.md).
 
 
