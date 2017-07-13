@@ -1,62 +1,64 @@
-DROP TABLE IF EXISTS iotdata.tripdatav2;
+CREATE DATABASE IF NOT EXISTS iotdata;
 
-CREATE EXTERNAL TABLE iotdata.tripdatav2 (
-  iotkey string,
-  eventDateTime string,
-  eventLat float,
-  eventLon float,
-  eventDist float,
-  eventAccMag float,
-  tripID string
+DROP TABLE IF EXISTS iotdata.tripdata;
+
+CREATE EXTERNAL TABLE iotdata.tripdata (
+	iotkey string,
+	eventDateTime string,
+	eventLat float,
+	eventLon float,
+	eventDist float,
+	eventAccMag float,
+	tripID string
 )
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
-LOCATION '/user/maria_dev/tripdatav2/'
+LOCATION '/user/maria_dev/tripdata/'
 tblproperties ("skip.header.line.count"="1");
 
-DROP TABLE IF EXISTS iotdata.tripdatav2Int;
+DROP TABLE IF EXISTS iotdata.tripdataInt;
 
-CREATE TABLE iotdata.tripdatav2Int
+CREATE TABLE iotdata.tripdataInt
 (
-iotKey string,
-tripID string,
-starttime string,
-endtime string,
-TotalDistance double,
-cLat double,
-cLon double
+	iotKey string,
+	tripID string,
+	starttime string,
+	endtime string,
+	TotalDistance double,
+	cLat double,
+	cLon double
 );
 
-TRUNCATE TABLE iotdata.tripdatav2Int;
+TRUNCATE TABLE iotdata.tripdataInt;
 
-INSERT INTO TABLE iotdata.tripdatav2Int
+INSERT INTO TABLE iotdata.tripdataInt
 SELECT iotkey,
-tripid,
-MIN(eventdatetime),
-MAX(eventdatetime),
-SUM(eventdist),
-AVG(eventlat),
-AVG(eventlon)
-FROM iotdata.tripdatav2
+	tripid,
+	MIN(eventdatetime),
+	MAX(eventdatetime),
+	SUM(eventdist),
+	AVG(eventlat),
+	AVG(eventlon)
+FROM iotdata.tripdata
 GROUP BY iotkey,tripid;
 
 
-DROP TABLE IF EXISTS iotdata.tripdatav2accInt;
+DROP TABLE IF EXISTS iotdata.tripdataaccInt;
 
-CREATE TABLE iotdata.tripdatav2accInt
+CREATE TABLE iotdata.tripdataaccInt
 (
-iotKey string,
-tripID string,
-accMaxTime string,
-accMax double
+	iotKey string,
+	tripID string,
+	accMaxTime string,
+	accMax double
 );
 
-TRUNCATE TABLE iotdata.tripdatav2accInt;
+TRUNCATE TABLE iotdata.tripdataaccInt;
 
-INSERT INTO TABLE iotdata.tripdatav2accInt
+INSERT INTO TABLE iotdata.tripdataaccInt
 SELECT iotkey,
-tripid,
-eventdatetime as maxacctime,
-eventaccmag as maxacc
+	tripid,
+	eventdatetime as maxacctime,
+	eventaccmag as maxacc
 FROM
 	(SELECT 
 	 	iotkey, 
@@ -64,38 +66,38 @@ FROM
 	 	eventdatetime, 
 	 	eventaccmag, 
 	 	row_number() over (partition by iotkey,tripid order by eventaccmag DESC) as r
-	 FROM iotdata.tripdatav2) t
+	 FROM iotdata.tripdata) t
 WHERE r = 1;
 
-DROP TABLE IF EXISTS iotdata.tripdatav2Final;
+DROP TABLE IF EXISTS iotdata.tripdataFinal;
 
-CREATE TABLE iotdata.tripdatav2Final
+CREATE TABLE iotdata.tripdataFinal
 (
-  iotKey string,
-  tripID string,
-  tripStartTime string,
-  tripEndTime string,
-  tripDistance double,
-  cLat double,
-  cLon double,
-  tripMaxAcc double,
-  tripMaxAccTime string
+	iotKey string,
+	tripID string,
+	tripStartTime string,
+	tripEndTime string,
+	tripDistance double,
+	cLat double,
+	cLon double,
+	tripMaxAcc double,
+	tripMaxAccTime string
 )ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'
 STORED AS TEXTFILE 
-LOCATION '/user/maria_dev/tripdatav2/summary';
+LOCATION '/user/maria_dev/tripdata/summary';
 
 
-TRUNCATE TABLE iotdata.tripdatav2Final;
+TRUNCATE TABLE iotdata.tripdataFinal;
 
-INSERT INTO TABLE iotdata.tripdatav2Final
+INSERT INTO TABLE iotdata.tripdataFinal
 SELECT a.iotkey,
-  a.tripid,
-  a.starttime,
-  a.endtime,
-  a.totaldistance,
-  a.cLat,
-  a.cLon,
-  b.accmax,
-  b.accmaxtime
-FROM iotdata.tripdatav2int a JOIN iotdata.tripdatav2accint b
+	a.tripid,
+	a.starttime,
+	a.endtime,
+	a.totaldistance,
+	a.cLat,
+	a.cLon,
+	b.accmax,
+	b.accmaxtime
+FROM iotdata.tripdataint a JOIN iotdata.tripdataaccint b
 ON a.tripid = b.tripid;

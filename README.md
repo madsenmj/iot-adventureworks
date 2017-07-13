@@ -34,10 +34,47 @@ A [data file](/data/updatedCustomerDatabase.csv) is maintained with the generate
 
 # Initial Trip Data Analysis
 
-The tripdata folder is then uploaded to a Hadoop cluster for processing using the a [Hive script](/src/aggregate_trip_data.hive). 
+The `tripdata` folder is then uploaded to a Hadoop cluster for processing. See [this information](https://hortonworks.com/products/sandbox/) for details on how to provision a virual Hadoop cluster and tutorials on moving the data and running Hive scripts.
+
+The data are moved to the `HDFS` to a new folder `tripdata` in `/user/maria_dev/`. The [Hive script](/src/aggregate_trip_data.hive) is then executed which summarizes the data and saves the output summary in a new file in `HDFS`: `/user/maria_dev/tripdata/summary/`. The filenames vary depending on the size of the input dataset, but will be numbered sequentially. A sample of this data (with added column headers) is provided [here](/data/tripdata_hive_sample.csv).
+
+# Connecting to Power Pivot
+
+Following [this tutorial](https://ayadshammout.com/2013/05/27/import-hadoop-data-into-sql-bi-semantic-model-tabular/), create the ODBC link between the Hadoop table and Power Pivot. 
+* [Download Hive ODBC Driver](https://hortonworks.com/downloads/)
+* [Configure ODBC driver](http://hortonworks.com/wp-content/uploads/2015/10/Hortonworks-Hive-ODBC-Driver-User-Guide.pdf)
+* Use the `iotdata` database and the `maria_dev` username.
+* Load the data into Power Pivot using the ODBC data source (using `Load to...` create a connection and load to the data model).
+
 
 # Tabular Model
 
-From there the data in the new hive table is connected to the tabular model for analysis. An example of the output hive table is found in /data/tripdata_hive_sample.csv from the raw data found in the /data/simulated_tripdata_sample folder.
+The sample PowerPivot tables and charts are provided [here](/src/TabularModel.xlsx).
+
+Connect to the SQL Server AdventureWorks database in the same Power Pivot notebook. Import the following tables:
+* `DimCustomer`
+* `DimGeography`
+* `DimProduct`
+* `DimProductCategory`
+* `DimProductSubcategory`
+* `FactInternetSales`
+
+## Power Query Editor
+
+I edited the input tables, removing unneeded columns and converting column types to appropriate values. After adding the `IoTKey` calculated column in the `FactInternetSales` table, connect the key from the `tripdatafinal` table in the relationships.
+
+I also filtered the `ProductKey` column in the `FactInternetSales` table to show only the product `222`, which is the product used for the IoT simulation.
+
+## Additional Data
+
+I added a date table (`Design\Date Table`) and set the date range from `1/1/2007` to `12/31/2017`.
+
+I added a new tab with a table `N Purchase Bins` which is a sequence of numbers counting up from `0` to `100`. I added this table to the model as `Purchase Bins`.
+
+Finally I added a [geographical database](\data\worldcitiespop.txt) that has geocode information for different world cities and countries. This data comes from [here](https://www.maxmind.com/en/free-world-cities-database) and has been reduced for the purpose of this project.
+
+## DAX Patterns
+
+The `DAX` patterns for the tabular model are described [here](\src\TabularModelDAX.md).
 
 
